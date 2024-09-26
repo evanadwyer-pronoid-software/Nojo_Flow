@@ -1,4 +1,4 @@
-package com.pronoidsoftware.nojoflow.ui.theme
+package com.pronoidsoftware.nojoflow.presentation.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

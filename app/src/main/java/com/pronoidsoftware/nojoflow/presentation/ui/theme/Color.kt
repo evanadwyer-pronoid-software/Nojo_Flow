@@ -1,4 +1,4 @@
-package com.pronoidsoftware.nojoflow.ui.theme
+package com.pronoidsoftware.nojoflow.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
