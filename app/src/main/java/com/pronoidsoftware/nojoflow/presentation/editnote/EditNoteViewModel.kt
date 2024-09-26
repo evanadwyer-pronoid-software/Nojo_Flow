@@ -9,8 +9,10 @@ import com.pronoidsoftware.nojoflow.presentation.ui.format
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -27,7 +29,7 @@ class EditNoteViewModel @Inject constructor(
 
 ) : ViewModel() {
     private val requiredTime = 10.seconds
-    private val timerTrigger = MutableSharedFlow<Boolean>()
+    private val writingTimerTrigger = MutableSharedFlow<Boolean>()
     private val formattedTime = timeAndEmitUntil(10f, requiredTime)
         .runningFold(requiredTime) { totalElapsedTime, newElapsedTime ->
             totalElapsedTime - newElapsedTime
@@ -38,7 +40,11 @@ class EditNoteViewModel @Inject constructor(
         .onCompletion {
             emit("")
         }
-    val remainingTime = timerTrigger
+    private val resetTimer = timeAndEmitUntil(10f, 5.seconds)
+        .onCompletion {
+            writingTimerTrigger.emit(false)
+        }
+    val remainingTime = writingTimerTrigger
         .flatMapLatest { shouldStart ->
             if (shouldStart) formattedTime else flowOf(requiredTime.format())
         }
@@ -58,13 +64,20 @@ class EditNoteViewModel @Inject constructor(
         when (action) {
             EditNoteAction.StartCountdown -> {
                 viewModelScope.launch {
-                    timerTrigger.emit(true)
+                    println("Starting writer countdown")
+                    writingTimerTrigger.emit(true)
+                    println("waiting...")
+                    delay(2000L)
+                    println("starting reset timer...")
+                    resetTimer.collect()
+                    println("reset timer concluded")
                 }
             }
 
             EditNoteAction.StopCountdown -> {
                 viewModelScope.launch {
-                    timerTrigger.emit(false)
+                    println("Stopping writer countdown")
+                    writingTimerTrigger.emit(false)
                 }
             }
         }
