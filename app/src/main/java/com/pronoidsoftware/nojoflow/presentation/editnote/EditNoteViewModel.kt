@@ -1,7 +1,11 @@
 @file:OptIn(ExperimentalCoroutinesApi::class)
+@file:Suppress("OPT_IN_USAGE")
 
 package com.pronoidsoftware.nojoflow.presentation.editnote
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pronoidsoftware.nojoflow.domain.timeAndEmitUntil
@@ -9,18 +13,20 @@ import com.pronoidsoftware.nojoflow.presentation.ui.format
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -28,9 +34,11 @@ import kotlin.time.Duration.Companion.seconds
 class EditNoteViewModel @Inject constructor(
 
 ) : ViewModel() {
-    private val requiredTime = 10.seconds
-    private val writingTimerTrigger = MutableSharedFlow<Boolean>()
-    private val formattedTime = timeAndEmitUntil(10f, requiredTime)
+    private val requiredTime = 15.seconds
+    val noteBody = TextFieldState()
+    private val writingTimerRunning = MutableStateFlow(false)
+    private val resetTimerRunning = MutableStateFlow(false)
+    private val formattedWritingTime = timeAndEmitUntil(10f, requiredTime)
         .runningFold(requiredTime) { totalElapsedTime, newElapsedTime ->
             totalElapsedTime - newElapsedTime
         }
@@ -40,13 +48,25 @@ class EditNoteViewModel @Inject constructor(
         .onCompletion {
             emit("")
         }
-    private val resetTimer = timeAndEmitUntil(10f, 5.seconds)
-        .onCompletion {
-            writingTimerTrigger.emit(false)
+
+    private val formattedResetTime = timeAndEmitUntil(10f, 5.seconds)
+        .runningFold(5.seconds) { totalElapsedTime, newElapsedTime ->
+            totalElapsedTime - newElapsedTime
         }
-    val remainingTime = writingTimerTrigger
-        .flatMapLatest { shouldStart ->
-            if (shouldStart) formattedTime else flowOf(requiredTime.format())
+        .map { totalElapsedTime ->
+            totalElapsedTime.format()
+        }
+        .onCompletion {
+            emit(5.seconds.format())
+            if (it == null) {
+                writingTimerRunning.emit(false)
+                noteBody.clearText()
+            }
+        }
+
+    val remainingTime = writingTimerRunning
+        .flatMapLatest { isRunning ->
+            if (isRunning) formattedWritingTime else flowOf(requiredTime.format())
         }
         .stateIn(
             viewModelScope,
@@ -54,32 +74,34 @@ class EditNoteViewModel @Inject constructor(
             requiredTime.format()
         )
 
-//    var state by mutableStateOf(EditNoteState())
-//        private set
+    val resetTime = resetTimerRunning
+        .flatMapLatest { isRunning ->
+            if (isRunning) formattedResetTime else flowOf(5.seconds.format())
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            5.seconds.format()
+        )
 
     private val eventChannel = Channel<EditNoteEvent>()
     val events = eventChannel.receiveAsFlow()
 
+    init {
+        snapshotFlow { noteBody.text }
+            .filter { it.isNotEmpty() }
+            .onEach {
+                writingTimerRunning.update { true }
+                resetTimerRunning.update { false }
+            }
+            .debounce(2000L)
+            .onEach { if (writingTimerRunning.value) resetTimerRunning.update { true } }
+            .launchIn(viewModelScope)
+    }
+
     fun onAction(action: EditNoteAction) {
         when (action) {
-            EditNoteAction.StartCountdown -> {
-                viewModelScope.launch {
-                    println("Starting writer countdown")
-                    writingTimerTrigger.emit(true)
-                    println("waiting...")
-                    delay(2000L)
-                    println("starting reset timer...")
-                    resetTimer.collect()
-                    println("reset timer concluded")
-                }
-            }
-
-            EditNoteAction.StopCountdown -> {
-                viewModelScope.launch {
-                    println("Stopping writer countdown")
-                    writingTimerTrigger.emit(false)
-                }
-            }
+            else -> Unit
         }
     }
 }
