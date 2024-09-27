@@ -1,6 +1,6 @@
 package com.pronoidsoftware.nojoflow.data
 
-import android.app.Application
+import android.content.Context
 import androidx.room.Room
 import com.pronoidsoftware.nojoflow.domain.LocalNoteDataSource
 import dagger.Module
@@ -16,7 +16,7 @@ object NoteDatabaseModule {
 
     @Provides
     @Singleton
-    fun provideNoteDatabase(@ApplicationContext app: Application): NoteDatabase {
+    fun provideNoteDatabase(@ApplicationContext app: Context): NoteDatabase {
         return Room.databaseBuilder(
             app,
             NoteDatabase::class.java,

@@ -3,11 +3,14 @@
 
 package com.pronoidsoftware.nojoflow.presentation.editnote
 
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pronoidsoftware.nojoflow.domain.LocalNoteDataSource
+import com.pronoidsoftware.nojoflow.domain.Note
 import com.pronoidsoftware.nojoflow.domain.timeAndEmitUntil
 import com.pronoidsoftware.nojoflow.presentation.ui.format
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,20 +28,42 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class EditNoteViewModel @Inject constructor(
-
+    savedStateHandle: SavedStateHandle,
+    private val localNoteDataSource: LocalNoteDataSource,
 ) : ViewModel() {
-    val noteBody = TextFieldState()
-    private val _canSave = MutableStateFlow(false)
+    private val _noteBody = MutableStateFlow("")
+    val noteBody = _noteBody
+        .onStart {
+            _noteBody.update {
+                savedStateHandle.getId()
+                    ?.let { existingNoteId -> localNoteDataSource.getNoteById(existingNoteId)?.body }
+                    ?: ""
+            }
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            ""
+        )
+    private val noteId = savedStateHandle.getId() ?: UUID.randomUUID().toString()
+    private var createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    private var editMade by mutableStateOf(false)
+    private val _canSave = MutableStateFlow(savedStateHandle.getId() != null)
     val canSave = _canSave.asStateFlow()
     private val requiredTime = 15.seconds
     private val resetTime = 5.seconds
@@ -48,6 +73,10 @@ class EditNoteViewModel @Inject constructor(
 
     private val eventChannel = Channel<EditNoteEvent>()
     val events = eventChannel.receiveAsFlow()
+
+    private fun SavedStateHandle.getId(): String? {
+        return get<String>("id")
+    }
 
     private val formattedWritingTime = timeAndEmitUntil(10f, requiredTime)
         .runningFold(requiredTime) { totalElapsedTime, newElapsedTime ->
@@ -61,6 +90,16 @@ class EditNoteViewModel @Inject constructor(
                 resetTimerRunning.update { false }
                 _canSave.update { true }
                 eventChannel.send(EditNoteEvent.WritingCompleted)
+                localNoteDataSource.upsertNote(
+                    Note(
+                        id = noteId,
+                        title = "New note-$noteId",
+                        body = noteBody.toString(),
+                        createdAt = createdAt,
+                        lastUpdatedAt = Clock.System.now()
+                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                    )
+                )
             }
         }
 
@@ -89,7 +128,7 @@ class EditNoteViewModel @Inject constructor(
             if (it == null) {
                 emit(1f)
                 _writingTimerRunning.update { false }
-                noteBody.clearText()
+                _noteBody.update { "" }
             }
         }
 
@@ -108,19 +147,45 @@ class EditNoteViewModel @Inject constructor(
         )
 
     init {
-        snapshotFlow { noteBody.text }
+        viewModelScope.launch {
+            val existingNote = localNoteDataSource.getNoteById(noteId)
+            createdAt = existingNote?.createdAt ?: Clock.System.now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+        }
+
+        noteBody
             .filter { it.isNotEmpty() }
             .onEach {
                 _writingTimerRunning.update { true }
                 resetTimerRunning.update { false }
             }
             .debounce(1000L)
-            .onEach { if (_writingTimerRunning.value) resetTimerRunning.update { true } }
+            .onEach {
+                if (_writingTimerRunning.value) resetTimerRunning.update { true }
+                if (canSave.value && editMade) {
+                    localNoteDataSource.upsertNote(
+                        Note(
+                            id = noteId,
+                            title = "New note-$noteId",
+                            body = noteBody.value,
+                            createdAt = createdAt,
+                            lastUpdatedAt = Clock.System.now()
+                                .toLocalDateTime(TimeZone.currentSystemDefault())
+                        )
+                    )
+                }
+            }
             .launchIn(viewModelScope)
     }
 
     fun onAction(action: EditNoteAction) {
         when (action) {
+            is EditNoteAction.OnUserInput -> {
+                viewModelScope.launch {
+                    _noteBody.update { action.newBody }
+                    editMade = true
+                }
+            }
             else -> Unit
         }
     }

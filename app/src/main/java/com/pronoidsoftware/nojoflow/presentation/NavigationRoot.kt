@@ -19,7 +19,7 @@ fun NavigationRoot(navHostController: NavHostController) {
                 onNavigateToEditNote = { id ->
                     navHostController.navigate(
                         EditNote(
-                            id = id
+                            id = id,
                         )
                     )
                 }
@@ -40,5 +40,5 @@ object NoteList
 
 @Serializable
 data class EditNote(
-    val id: String?
+    val id: String?,
 )

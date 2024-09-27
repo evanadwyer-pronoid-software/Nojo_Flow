@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -58,6 +57,7 @@ fun EditNoteScreenRoot(
     val remainingTime by viewModel.remainingTime.collectAsStateWithLifecycle()
     val resetAlpha by viewModel.resetAlpha.collectAsStateWithLifecycle()
     val canSave by viewModel.canSave.collectAsStateWithLifecycle()
+    val noteBody by viewModel.noteBody.collectAsStateWithLifecycle()
 
     BackHandler(enabled = isWriting && !canSave) {  }
 
@@ -65,7 +65,7 @@ fun EditNoteScreenRoot(
         isWriting = isWriting,
         remainingTime = remainingTime,
         resetAlpha = resetAlpha,
-        noteBody = viewModel.noteBody,
+        noteBody = noteBody,
         canSave = canSave,
         onAction = { action ->
             when (action) {
@@ -81,7 +81,7 @@ internal fun EditNoteScreen(
     isWriting: Boolean,
     remainingTime: String,
     resetAlpha: Float,
-    noteBody: TextFieldState,
+    noteBody: String,
     canSave: Boolean,
     onAction: (EditNoteAction) -> Unit
 ) {
@@ -124,7 +124,10 @@ internal fun EditNoteScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             BasicTextField(
-                state = noteBody,
+                value = noteBody,
+                onValueChange = {
+                    onAction(EditNoteAction.OnUserInput(it))
+                },
                 textStyle = TextStyle.Default.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
@@ -148,7 +151,7 @@ private fun EditNoteScreenPreview() {
             remainingTime = "5:00",
             resetAlpha = 1f,
             canSave = false,
-            noteBody = TextFieldState()
+            noteBody = ""
         )
     }
 }
