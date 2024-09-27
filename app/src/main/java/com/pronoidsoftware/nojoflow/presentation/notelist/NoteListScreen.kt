@@ -31,6 +31,7 @@ import com.pronoidsoftware.nojoflow.presentation.ui.theme.NojoFlowTheme
 
 @Composable
 fun NoteListScreenRoot(
+    onNavigateToEditNote: (String?) -> Unit,
     viewModel: NoteListViewModel = hiltViewModel(),
 ) {
     ObserveAsEvents(flow = viewModel.events) { event ->
@@ -43,9 +44,9 @@ fun NoteListScreenRoot(
         state = viewModel.state,
         onAction = { action ->
             when (action) {
-
+                NoteListAction.CreateNote -> onNavigateToEditNote(null)
+                is NoteListAction.EditNote -> onNavigateToEditNote(action.id)
                 else -> viewModel.onAction(action)
-
             }
         }
     )
@@ -59,18 +60,6 @@ internal fun NoteListScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            onAction(NoteListAction.Cancel)
-                        }
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.cancel)
-                        )
-                    }
-                },
                 title = {
                     Text(stringResource(R.string.app_name))
                 },
@@ -97,7 +86,10 @@ internal fun NoteListScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(state.notes) {
+            items(
+                items = state.notes,
+                key = { it.id }
+            ) {
                 Text(
                     text = it.title,
                     modifier = Modifier

@@ -121,11 +121,7 @@ class EditNoteViewModel @Inject constructor(
 
     fun onAction(action: EditNoteAction) {
         when (action) {
-            EditNoteAction.Cancel -> {
-                viewModelScope.launch {
-                    eventChannel.send(EditNoteEvent.Cancel)
-                }
-            }
+            else -> Unit
         }
     }
 }

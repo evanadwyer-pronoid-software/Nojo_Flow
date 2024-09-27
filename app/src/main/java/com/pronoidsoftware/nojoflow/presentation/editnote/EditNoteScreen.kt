@@ -3,6 +3,7 @@
 package com.pronoidsoftware.nojoflow.presentation.editnote
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,10 +51,6 @@ fun EditNoteScreenRoot(
                     Toast.LENGTH_LONG,
                 ).show()
             }
-
-            EditNoteEvent.Cancel -> {
-                onCancel()
-            }
         }
     }
 
@@ -61,6 +58,9 @@ fun EditNoteScreenRoot(
     val remainingTime by viewModel.remainingTime.collectAsStateWithLifecycle()
     val resetAlpha by viewModel.resetAlpha.collectAsStateWithLifecycle()
     val canSave by viewModel.canSave.collectAsStateWithLifecycle()
+
+    BackHandler(enabled = isWriting && !canSave) {  }
+
     EditNoteScreen(
         isWriting = isWriting,
         remainingTime = remainingTime,
@@ -69,7 +69,7 @@ fun EditNoteScreenRoot(
         canSave = canSave,
         onAction = { action ->
             when (action) {
-
+                EditNoteAction.Cancel -> onCancel()
                 else -> viewModel.onAction(action)
             }
         }
@@ -107,7 +107,7 @@ internal fun EditNoteScreen(
                 },
                 actions = {
                     if (canSave) {
-                        Text("Able to save")
+                        Text(stringResource(R.string.savable))
                     } else {
                         Text(remainingTime)
                     }
