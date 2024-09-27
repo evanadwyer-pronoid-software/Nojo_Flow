@@ -49,15 +49,15 @@ class EditNoteViewModel @Inject constructor(
             emit("")
         }
 
-    private val formattedResetTime = timeAndEmitUntil(10f, 5.seconds)
+    private val formattedResetAlpha = timeAndEmitUntil(10f, 5.seconds)
         .runningFold(5.seconds) { totalElapsedTime, newElapsedTime ->
             totalElapsedTime - newElapsedTime
         }
         .map { totalElapsedTime ->
-            totalElapsedTime.format()
+            (totalElapsedTime / 5.seconds).toFloat().coerceIn(0f, 1f)
         }
         .onCompletion {
-            emit(5.seconds.format())
+            emit(0f)
             if (it == null) {
                 writingTimerRunning.emit(false)
                 noteBody.clearText()
@@ -74,14 +74,14 @@ class EditNoteViewModel @Inject constructor(
             requiredTime.format()
         )
 
-    val resetTime = resetTimerRunning
+    val resetAlpha = resetTimerRunning
         .flatMapLatest { isRunning ->
-            if (isRunning) formattedResetTime else flowOf(5.seconds.format())
+            if (isRunning) formattedResetAlpha else flowOf(1f)
         }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
-            5.seconds.format()
+            1f
         )
 
     private val eventChannel = Channel<EditNoteEvent>()
@@ -94,7 +94,7 @@ class EditNoteViewModel @Inject constructor(
                 writingTimerRunning.update { true }
                 resetTimerRunning.update { false }
             }
-            .debounce(2000L)
+            .debounce(1000L)
             .onEach { if (writingTimerRunning.value) resetTimerRunning.update { true } }
             .launchIn(viewModelScope)
     }

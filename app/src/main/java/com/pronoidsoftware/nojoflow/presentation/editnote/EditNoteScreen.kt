@@ -3,18 +3,17 @@ package com.pronoidsoftware.nojoflow.presentation.editnote
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,10 +33,10 @@ fun EditNoteScreenRoot(
         }
 
     val remainingTime by viewModel.remainingTime.collectAsStateWithLifecycle()
-    val resetTime by viewModel.resetTime.collectAsStateWithLifecycle()
+    val resetAlpha by viewModel.resetAlpha.collectAsStateWithLifecycle()
     EditNoteScreen(
         remainingTime = remainingTime,
-        resetTime = resetTime,
+        resetAlpha = resetAlpha,
         noteBody = viewModel.noteBody,
         onAction = { action ->
             when (action) {
@@ -51,7 +50,7 @@ fun EditNoteScreenRoot(
 @Composable
 internal fun EditNoteScreen(
     remainingTime: String,
-    resetTime: String,
+    resetAlpha: Float,
     noteBody: TextFieldState,
     onAction: (EditNoteAction) -> Unit
 ) {
@@ -65,26 +64,10 @@ internal fun EditNoteScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             Text("writing time: $remainingTime", color = Color.Black)
-            Text("reset time: $resetTime", color = Color.Black)
-            Row {
-                TextButton(
-                    onClick = {
-                        onAction(EditNoteAction.StartCountdown)
-                    }
-                ) {
-                    Text("Start Countdown")
-                }
-                TextButton(
-                    onClick = {
-                        onAction(EditNoteAction.StopCountdown)
-                    }
-                ) {
-                    Text("Stop Countdown")
-                }
-            }
             BasicTextField(
                 state = noteBody,
                 modifier = Modifier
+                    .alpha(resetAlpha)
                     .weight(1f)
                     .fillMaxSize()
             )
@@ -99,7 +82,7 @@ private fun EditNoteScreenPreview() {
         EditNoteScreen(
             onAction = {},
             remainingTime = "5:00",
-            resetTime = "0:05",
+            resetAlpha = 1f,
             noteBody = TextFieldState()
         )
     }
