@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import com.pronoidsoftware.nojoflow.presentation.editnote.EditNoteScreenRoot
 import com.pronoidsoftware.nojoflow.presentation.ui.theme.NojoFlowTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.system.exitProcess
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -15,7 +16,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NojoFlowTheme {
-                EditNoteScreenRoot()
+                EditNoteScreenRoot(
+                    onCancel = {
+                        exitProcess(0)
+                    }
+                )
             }
         }
     }

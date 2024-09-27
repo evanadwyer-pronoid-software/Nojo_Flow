@@ -5,9 +5,6 @@ package com.pronoidsoftware.nojoflow.presentation.editnote
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
@@ -31,6 +29,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -39,11 +38,12 @@ class EditNoteViewModel @Inject constructor(
 
 ) : ViewModel() {
     val noteBody = TextFieldState()
-    var canSave by mutableStateOf(false)
-        private set
+    private val _canSave = MutableStateFlow(false)
+    val canSave = _canSave.asStateFlow()
     private val requiredTime = 15.seconds
     private val resetTime = 5.seconds
-    private val writingTimerRunning = MutableStateFlow(false)
+    private val _writingTimerRunning = MutableStateFlow(false)
+    val writingTimerRunning = _writingTimerRunning.asStateFlow()
     private val resetTimerRunning = MutableStateFlow(false)
 
     private val eventChannel = Channel<EditNoteEvent>()
@@ -59,14 +59,14 @@ class EditNoteViewModel @Inject constructor(
         .onCompletion {
             if (it == null) {
                 resetTimerRunning.update { false }
-                canSave = true
+                _canSave.update { true }
                 eventChannel.send(EditNoteEvent.WritingCompleted)
             }
         }
 
-    val remainingTime = writingTimerRunning
+    val remainingTime = _writingTimerRunning
         .flatMapLatest { isRunning ->
-            if (canSave) {
+            if (_canSave.value) {
                 emptyFlow()
             } else {
                 if (isRunning) formattedWritingTime else flowOf(requiredTime.format())
@@ -87,15 +87,15 @@ class EditNoteViewModel @Inject constructor(
         }
         .onCompletion {
             if (it == null) {
-                emit(0f)
-                writingTimerRunning.update { false }
+                emit(1f)
+                _writingTimerRunning.update { false }
                 noteBody.clearText()
             }
         }
 
     val resetAlpha = resetTimerRunning
         .flatMapLatest { isRunning ->
-            if (canSave) {
+            if (_canSave.value) {
                 emptyFlow()
             } else {
                 if (isRunning) formattedResetAlpha else flowOf(1f)
@@ -111,17 +111,21 @@ class EditNoteViewModel @Inject constructor(
         snapshotFlow { noteBody.text }
             .filter { it.isNotEmpty() }
             .onEach {
-                writingTimerRunning.update { true }
+                _writingTimerRunning.update { true }
                 resetTimerRunning.update { false }
             }
             .debounce(1000L)
-            .onEach { if (writingTimerRunning.value) resetTimerRunning.update { true } }
+            .onEach { if (_writingTimerRunning.value) resetTimerRunning.update { true } }
             .launchIn(viewModelScope)
     }
 
     fun onAction(action: EditNoteAction) {
         when (action) {
-            else -> Unit
+            EditNoteAction.Cancel -> {
+                viewModelScope.launch {
+                    eventChannel.send(EditNoteEvent.Cancel)
+                }
+            }
         }
     }
 }
