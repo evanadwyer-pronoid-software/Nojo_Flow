@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Nojo Flow</string>
+    <string name="writing_completed">You\'ve reached the required writing time!</string>
 </resources>
