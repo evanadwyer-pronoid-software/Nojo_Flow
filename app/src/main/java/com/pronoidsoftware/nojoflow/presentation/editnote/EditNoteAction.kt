@@ -5,4 +5,7 @@ sealed interface EditNoteAction {
     data class OnUserInput(
         val newBody: String,
     ): EditNoteAction
+    data class OnTitleEntered(
+        val title: String,
+    ): EditNoteAction
 }

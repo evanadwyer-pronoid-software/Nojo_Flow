@@ -60,6 +60,10 @@ class EditNoteViewModel @Inject constructor(
             SharingStarted.WhileSubscribed(5000L),
             ""
         )
+    var title by mutableStateOf("")
+        private set
+    var isShowingTitleDialog by mutableStateOf(false)
+        private set
     private val noteId = savedStateHandle.getId() ?: UUID.randomUUID().toString()
     private var createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     private var editMade by mutableStateOf(false)
@@ -93,7 +97,7 @@ class EditNoteViewModel @Inject constructor(
                 localNoteDataSource.upsertNote(
                     Note(
                         id = noteId,
-                        title = "New note-$noteId",
+                        title = title,
                         body = noteBody.toString(),
                         createdAt = createdAt,
                         lastUpdatedAt = Clock.System.now()
@@ -151,6 +155,10 @@ class EditNoteViewModel @Inject constructor(
             val existingNote = localNoteDataSource.getNoteById(noteId)
             createdAt = existingNote?.createdAt ?: Clock.System.now()
                 .toLocalDateTime(TimeZone.currentSystemDefault())
+            title = existingNote?.title ?: ""
+            if (existingNote == null) {
+                isShowingTitleDialog = true
+            }
         }
 
         noteBody
@@ -166,7 +174,7 @@ class EditNoteViewModel @Inject constructor(
                     localNoteDataSource.upsertNote(
                         Note(
                             id = noteId,
-                            title = "New note-$noteId",
+                            title = title,
                             body = noteBody.value,
                             createdAt = createdAt,
                             lastUpdatedAt = Clock.System.now()
@@ -186,6 +194,19 @@ class EditNoteViewModel @Inject constructor(
                     editMade = true
                 }
             }
+
+            is EditNoteAction.OnTitleEntered -> {
+                title = action.title
+                isShowingTitleDialog = false
+            }
+
+            EditNoteAction.Cancel -> {
+                viewModelScope.launch {
+                    isShowingTitleDialog = false
+                    eventChannel.send(EditNoteEvent.Cancel)
+                }
+            }
+
             else -> Unit
         }
     }
