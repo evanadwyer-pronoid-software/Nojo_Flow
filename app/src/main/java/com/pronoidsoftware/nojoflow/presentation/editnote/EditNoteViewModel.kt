@@ -98,7 +98,7 @@ class EditNoteViewModel @Inject constructor(
                     Note(
                         id = noteId,
                         title = title,
-                        body = noteBody.toString(),
+                        body = noteBody.value,
                         createdAt = createdAt,
                         lastUpdatedAt = Clock.System.now()
                             .toLocalDateTime(TimeZone.currentSystemDefault())

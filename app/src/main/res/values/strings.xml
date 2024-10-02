@@ -3,7 +3,9 @@
     <string name="writing_completed">You\'ve reached the required writing time!</string>
     <string name="cancel">Cancel</string>
     <string name="create_new">Create a new note</string>
-    <string name="savable">Able to save</string>
     <string name="enter_title">Please enter a title for this note:</string>
     <string name="use_title">Use this title</string>
+    <string name="time_completed">The required writing time for this note has been completed</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
 </resources>
