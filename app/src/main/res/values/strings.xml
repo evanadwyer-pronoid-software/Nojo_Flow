@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Nojo Flow</string>
+    <string name="app_name">Forget-Me-Note</string>
     <string name="writing_completed">You\'ve reached the required writing time!</string>
     <string name="cancel">Cancel</string>
     <string name="create_new">Create a new note</string>
