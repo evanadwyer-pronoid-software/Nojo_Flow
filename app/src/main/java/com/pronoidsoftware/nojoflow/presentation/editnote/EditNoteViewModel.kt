@@ -39,6 +39,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
@@ -69,7 +71,6 @@ class EditNoteViewModel @Inject constructor(
     private var editMade by mutableStateOf(false)
     private val _canSave = MutableStateFlow(savedStateHandle.getId() != null)
     val canSave = _canSave.asStateFlow()
-    private val requiredTime = 15.seconds
     private val resetTime = 5.seconds
     private val _writingTimerRunning = MutableStateFlow(false)
     val writingTimerRunning = _writingTimerRunning.asStateFlow()
@@ -82,43 +83,50 @@ class EditNoteViewModel @Inject constructor(
         return get<String>("id")
     }
 
-    private val formattedWritingTime = timeAndEmitUntil(10f, requiredTime)
-        .runningFold(requiredTime) { totalElapsedTime, newElapsedTime ->
-            totalElapsedTime - newElapsedTime
-        }
-        .map { totalElapsedTime ->
-            totalElapsedTime.format()
-        }
-        .onCompletion {
-            if (it == null) {
-                resetTimerRunning.update { false }
-                _canSave.update { true }
-                eventChannel.send(EditNoteEvent.WritingCompleted)
-                localNoteDataSource.upsertNote(
-                    Note(
-                        id = noteId,
-                        title = title,
-                        body = noteBody.value,
-                        createdAt = createdAt,
-                        lastUpdatedAt = Clock.System.now()
-                            .toLocalDateTime(TimeZone.currentSystemDefault())
-                    )
-                )
+    private fun SavedStateHandle.getRequiredWritingTimeMin(): Duration {
+        return (get<Int>("requiredWritingTimeMin") ?: 5).minutes
+    }
+
+    private val formattedWritingTime =
+        timeAndEmitUntil(10f, savedStateHandle.getRequiredWritingTimeMin())
+            .runningFold(savedStateHandle.getRequiredWritingTimeMin()) { totalElapsedTime, newElapsedTime ->
+                totalElapsedTime - newElapsedTime
             }
-        }
+            .map { totalElapsedTime ->
+                totalElapsedTime.format()
+            }
+            .onCompletion {
+                if (it == null) {
+                    resetTimerRunning.update { false }
+                    _canSave.update { true }
+                    eventChannel.send(EditNoteEvent.WritingCompleted)
+                    localNoteDataSource.upsertNote(
+                        Note(
+                            id = noteId,
+                            title = title,
+                            body = noteBody.value,
+                            createdAt = createdAt,
+                            lastUpdatedAt = Clock.System.now()
+                                .toLocalDateTime(TimeZone.currentSystemDefault())
+                        )
+                    )
+                }
+            }
 
     val remainingTime = _writingTimerRunning
         .flatMapLatest { isRunning ->
             if (_canSave.value) {
                 emptyFlow()
             } else {
-                if (isRunning) formattedWritingTime else flowOf(requiredTime.format())
+                if (isRunning) formattedWritingTime else flowOf(
+                    savedStateHandle.getRequiredWritingTimeMin().format()
+                )
             }
         }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
-            requiredTime.format()
+            savedStateHandle.getRequiredWritingTimeMin().format()
         )
 
     private val formattedResetAlpha = timeAndEmitUntil(10f, resetTime)

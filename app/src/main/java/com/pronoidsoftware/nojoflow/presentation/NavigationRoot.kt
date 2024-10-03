@@ -16,10 +16,11 @@ fun NavigationRoot(navHostController: NavHostController) {
     ) {
         composable<NoteList> {
             NoteListScreenRoot(
-                onNavigateToEditNote = { id ->
+                onNavigateToEditNote = { id, requiredWritingTimeMin ->
                     navHostController.navigate(
                         EditNote(
                             id = id,
+                            requiredWritingTimeMin = requiredWritingTimeMin
                         )
                     )
                 }
@@ -41,4 +42,5 @@ object NoteList
 @Serializable
 data class EditNote(
     val id: String?,
+    val requiredWritingTimeMin: Int?,
 )

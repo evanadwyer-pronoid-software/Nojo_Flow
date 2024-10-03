@@ -2,7 +2,9 @@
 
 package com.pronoidsoftware.nojoflow.presentation.notelist
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +14,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,11 +26,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.pronoidsoftware.nojoflow.R
 import com.pronoidsoftware.nojoflow.presentation.ui.EnterTitleDialog
 import com.pronoidsoftware.nojoflow.presentation.ui.ObserveAsEvents
+import com.pronoidsoftware.nojoflow.presentation.ui.format
 import com.pronoidsoftware.nojoflow.presentation.ui.theme.NojoFlowTheme
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun NoteListScreenRoot(
-    onNavigateToEditNote: (String?) -> Unit,
+    onNavigateToEditNote: (String?, Int?) -> Unit,
     viewModel: NoteListViewModel = hiltViewModel(),
 ) {
     ObserveAsEvents(flow = viewModel.events) { event ->
@@ -42,8 +45,8 @@ fun NoteListScreenRoot(
         state = viewModel.state,
         onAction = { action ->
             when (action) {
-                NoteListAction.CreateNote -> onNavigateToEditNote(null)
-                is NoteListAction.EditNote -> onNavigateToEditNote(action.id)
+                is NoteListAction.CreateNote -> onNavigateToEditNote(null, action.requiredWritingTimeMin)
+                is NoteListAction.EditNote -> onNavigateToEditNote(action.id, null)
                 else -> viewModel.onAction(action)
             }
         }
@@ -62,15 +65,19 @@ internal fun NoteListScreen(
                     Text(stringResource(R.string.app_name))
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            onAction(NoteListAction.CreateNote)
-                        }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .clickable {
+                                onAction(NoteListAction.CreateNote(state.requiredWritingTime))
+                            }
                     ) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = stringResource(R.string.create_new)
                         )
+                        Text("(${state.requiredWritingTime.minutes.format()})")
                     }
                 }
             )

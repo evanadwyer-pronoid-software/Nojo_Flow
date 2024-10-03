@@ -101,35 +101,30 @@ internal fun EditNoteScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 navigationIcon = {
-                    if (!isWriting || canSave) {
-                        IconButton(
-                            onClick = {
-                                onAction(EditNoteAction.Cancel)
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = stringResource(R.string.cancel)
-                            )
-                        }
+                    IconButton(
+                        onClick = {
+                            onAction(EditNoteAction.Cancel)
+                        },
+                        enabled = !isWriting || canSave,
+                        modifier = Modifier.alpha(if (!isWriting || canSave) 1f else 0f)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.cancel)
+                        )
                     }
                 },
                 title = {
                     Text(noteTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 },
                 actions = {
-                    IconButton(
-                        onClick = {}
-                    ) {
-                        if (canSave) {
-                            Icon(
-                                painterResource(R.drawable.time_completed),
-                                contentDescription = stringResource(R.string.time_completed)
-                            )
-                        } else {
-                            Text(remainingTime)
-
-                        }
+                    if (canSave) {
+                        Icon(
+                            painterResource(R.drawable.time_completed),
+                            contentDescription = stringResource(R.string.time_completed)
+                        )
+                    } else {
+                        Text(remainingTime)
                     }
                 }
             )

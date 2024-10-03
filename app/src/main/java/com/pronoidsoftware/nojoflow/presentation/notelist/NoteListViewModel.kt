@@ -3,9 +3,14 @@ package com.pronoidsoftware.nojoflow.presentation.notelist
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pronoidsoftware.nojoflow.domain.LocalNoteDataSource
+import com.pronoidsoftware.nojoflow.domain.PreferencesConstants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
@@ -19,6 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
+    dataStore: DataStore<Preferences>,
     private val localNoteDataSource: LocalNoteDataSource
 ) : ViewModel() {
 
@@ -29,9 +35,27 @@ class NoteListViewModel @Inject constructor(
     val events = eventChannel.receiveAsFlow()
 
     init {
+        viewModelScope.launch {
+            dataStore.edit {
+                it[intPreferencesKey(PreferencesConstants.REQUIRED_WRITING_TIME)] = 1
+            }
+        }
+
         localNoteDataSource.getNotes()
             .onEach {
-                state = NoteListState(it)
+                state = state.copy(
+                    notes = it,
+                )
+            }
+            .launchIn(viewModelScope)
+
+        dataStore.data
+            .onEach {
+                val requiredWritingTimeMin =
+                    it[intPreferencesKey(PreferencesConstants.REQUIRED_WRITING_TIME)] ?: 5
+                state = state.copy(
+                    requiredWritingTime = requiredWritingTimeMin
+                )
             }
             .launchIn(viewModelScope)
     }
