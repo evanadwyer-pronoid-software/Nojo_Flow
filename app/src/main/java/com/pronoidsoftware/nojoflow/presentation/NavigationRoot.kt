@@ -1,7 +1,6 @@
 package com.pronoidsoftware.nojoflow.presentation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -19,13 +18,11 @@ fun NavigationRoot(navHostController: NavHostController) {
         composable<NoteList>(
             enterTransition = {
                 slideIntoContainer(
-                    animationSpec = tween(1000),
                     towards = AnimatedContentTransitionScope.SlideDirection.End
                 )
             },
             exitTransition = {
                 slideOutOfContainer(
-                    animationSpec = tween(1000),
                     towards = AnimatedContentTransitionScope.SlideDirection.Start
                 )
             }
@@ -44,13 +41,11 @@ fun NavigationRoot(navHostController: NavHostController) {
         composable<EditNote>(
             enterTransition = {
                 slideIntoContainer(
-                    animationSpec = tween(1000),
                     towards = AnimatedContentTransitionScope.SlideDirection.Start
                 )
             },
             exitTransition = {
                 slideOutOfContainer(
-                    animationSpec = tween(1000),
                     towards = AnimatedContentTransitionScope.SlideDirection.End
                 )
             }
