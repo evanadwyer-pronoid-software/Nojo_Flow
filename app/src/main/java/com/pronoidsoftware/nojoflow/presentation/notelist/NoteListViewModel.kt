@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
-    dataStore: DataStore<Preferences>,
+    private val dataStore: DataStore<Preferences>,
     private val localNoteDataSource: LocalNoteDataSource
 ) : ViewModel() {
 
@@ -35,12 +35,6 @@ class NoteListViewModel @Inject constructor(
     val events = eventChannel.receiveAsFlow()
 
     init {
-        viewModelScope.launch {
-            dataStore.edit {
-                it[intPreferencesKey(PreferencesConstants.REQUIRED_WRITING_TIME)] = 1
-            }
-        }
-
         localNoteDataSource.getNotes()
             .onEach {
                 state = state.copy(
@@ -62,6 +56,14 @@ class NoteListViewModel @Inject constructor(
 
     fun onAction(action: NoteListAction) {
         when (action) {
+
+            is NoteListAction.SelectRequiredWritingTimeMin -> {
+                viewModelScope.launch {
+                    dataStore.edit {
+                        it[intPreferencesKey(PreferencesConstants.REQUIRED_WRITING_TIME)] = action.newRequiredWritingTimeMin
+                    }
+                }
+            }
 
             is NoteListAction.OpenRenameNote -> {
                 state = state.copy(

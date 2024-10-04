@@ -2,32 +2,54 @@
 
 package com.pronoidsoftware.nojoflow.presentation.notelist
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pronoidsoftware.nojoflow.R
+import com.pronoidsoftware.nojoflow.domain.PreferencesConstants
 import com.pronoidsoftware.nojoflow.presentation.ui.EnterTitleDialog
 import com.pronoidsoftware.nojoflow.presentation.ui.ObserveAsEvents
 import com.pronoidsoftware.nojoflow.presentation.ui.format
 import com.pronoidsoftware.nojoflow.presentation.ui.theme.NojoFlowTheme
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 
 @Composable
@@ -45,7 +67,11 @@ fun NoteListScreenRoot(
         state = viewModel.state,
         onAction = { action ->
             when (action) {
-                is NoteListAction.CreateNote -> onNavigateToEditNote(null, action.requiredWritingTimeMin)
+                is NoteListAction.CreateNote -> onNavigateToEditNote(
+                    null,
+                    action.requiredWritingTimeMin
+                )
+
                 is NoteListAction.EditNote -> onNavigateToEditNote(action.id, null)
                 else -> viewModel.onAction(action)
             }
@@ -58,67 +84,150 @@ internal fun NoteListScreen(
     state: NoteListState,
     onAction: (NoteListAction) -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(stringResource(R.string.app_name))
-                },
-                actions = {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .clickable {
-                                onAction(NoteListAction.CreateNote(state.requiredWritingTime))
-                            }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerState = drawerState,
+            ) {
+                Text(
+                    text = stringResource(R.string.time_selection),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column {
+                        PreferencesConstants.TIME_SETTING_OPTIONS.forEach { timeSetting ->
+                            NavigationDrawerItem(
+                                label = {
+                                    Text(timeSetting.minutes.format())
+                                },
+                                selected = timeSetting == state.requiredWritingTime,
+                                onClick = {
+                                    onAction(NoteListAction.SelectRequiredWritingTimeMin(timeSetting))
+                                    scope.launch {
+                                        drawerState.close()
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        painterResource(R.drawable.time_completed),
+                                        contentDescription = stringResource(
+                                            R.string.selected_time,
+                                            timeSetting
+                                        ),
+                                        modifier = Modifier.alpha(if (timeSetting == state.requiredWritingTime) 1f else 0f)
+                                    )
+                                },
+                                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                            )
+                        }
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = stringResource(R.string.create_new)
+                        Spacer(modifier = Modifier.weight(1f))
+                        Image(
+                            painterResource(R.drawable.pronoid_logo),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(100.dp)
+                                .padding(16.dp)
                         )
-                        Text("(${state.requiredWritingTime.minutes.format()})")
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
-            )
+            }
         }
-    ) { innerPadding ->
-        if (state.isShowingRenameNoteDialog) {
-            EnterTitleDialog(
-                initialText = state.noteBeingRenamed?.title ?: "",
-                onSubmit = { newTitle ->
-                    onAction(NoteListAction.SubmitNewTitle(newTitle))
-                },
-                onDismiss = {
-                    onAction(NoteListAction.DismissNewTitle)
-                }
-            )
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            items(
-                items = state.notes,
-                key = { it.id }
-            ) { note ->
-                NoteItem(
-                    noteTitle = note.title,
-                    onRenameClick = {
-                        onAction(NoteListAction.OpenRenameNote(note))
+    ) {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    drawerState.open()
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings)
+                            )
+                        }
                     },
-                    onDeletedClick = {
-                        onAction(NoteListAction.DeleteNote(note))
+                    title = {
+                        Text(stringResource(R.string.app_name))
                     },
-                    onEditNoteClick = {
-                        onAction(NoteListAction.EditNote(note.id))
+                    actions = {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .clickable {
+                                    onAction(NoteListAction.CreateNote(state.requiredWritingTime))
+                                }
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = stringResource(R.string.create_new)
+                            )
+                            Text(
+                                text = "(${state.requiredWritingTime.minutes.format()})",
+                                modifier = Modifier.alpha(if (state.requiredWritingTime > 0) 1f else 0f)
+                            )
+                        }
                     }
                 )
+            }
+        ) { innerPadding ->
+            if (state.isShowingRenameNoteDialog) {
+                EnterTitleDialog(
+                    initialText = state.noteBeingRenamed?.title ?: "",
+                    onSubmit = { newTitle ->
+                        onAction(NoteListAction.SubmitNewTitle(newTitle))
+                    },
+                    onDismiss = {
+                        onAction(NoteListAction.DismissNewTitle)
+                    }
+                )
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                items(
+                    items = state.notes,
+                    key = { it.id }
+                ) { note ->
+                    NoteItem(
+                        noteTitle = note.title,
+                        onRenameClick = {
+                            onAction(NoteListAction.OpenRenameNote(note))
+                        },
+                        onDeletedClick = {
+                            onAction(NoteListAction.DeleteNote(note))
+                        },
+                        onEditNoteClick = {
+                            onAction(NoteListAction.EditNote(note.id))
+                        }
+                    )
+                }
             }
         }
     }

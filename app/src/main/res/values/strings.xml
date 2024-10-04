@@ -8,4 +8,7 @@
     <string name="time_completed">The required writing time for this note has been completed</string>
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>
+    <string name="settings">Change the required writing time</string>
+    <string name="selected_time">Writing for %d minutes</string>
+    <string name="time_selection">Select your required writing time:</string>
 </resources>

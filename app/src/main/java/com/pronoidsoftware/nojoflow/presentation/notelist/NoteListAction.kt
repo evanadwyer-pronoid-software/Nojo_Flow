@@ -3,6 +3,10 @@ package com.pronoidsoftware.nojoflow.presentation.notelist
 import com.pronoidsoftware.nojoflow.domain.Note
 
 sealed interface NoteListAction {
+    data class SelectRequiredWritingTimeMin(
+        val newRequiredWritingTimeMin: Int
+    ) : NoteListAction
+
     data class CreateNote(
         val requiredWritingTimeMin: Int
     ) : NoteListAction
