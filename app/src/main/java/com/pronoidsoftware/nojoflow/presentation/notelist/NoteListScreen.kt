@@ -287,6 +287,7 @@ internal fun NoteListScreen(
                     key = { it.id }
                 ) { note ->
                     NoteItem(
+                        modifier = Modifier.animateItem(),
                         noteTitle = note.title,
                         onRenameClick = {
                             onAction(NoteListAction.OpenRenameNote(note))
