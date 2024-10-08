@@ -8,4 +8,5 @@ data class NoteListState(
     val isShowingRenameNoteDialog: Boolean = false,
     val noteBeingRenamed: Note? = null,
     val isAutoDNDEnabled: Boolean = false,
+    val isShowingDNDDialog: Boolean = false,
 )

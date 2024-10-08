@@ -28,4 +28,7 @@ sealed interface NoteListAction {
     data class DeleteNote(
         val note: Note,
     ) : NoteListAction
+
+    data object ShowDNDDialog : NoteListAction
+    data object HideDNDDialog : NoteListAction
 }

@@ -102,6 +102,18 @@ class NoteListViewModel @Inject constructor(
                 }
             }
 
+            NoteListAction.ShowDNDDialog -> {
+                state = state.copy(
+                    isShowingDNDDialog = true
+                )
+            }
+
+            NoteListAction.HideDNDDialog -> {
+                state = state.copy(
+                    isShowingDNDDialog = false
+                )
+            }
+
             else -> Unit
         }
     }

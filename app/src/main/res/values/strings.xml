@@ -11,5 +11,9 @@
     <string name="settings">Change the required writing time</string>
     <string name="selected_time">Writing for %d minutes</string>
     <string name="time_selection">Select your required writing time:</string>
-    <string name="enable_dnd_mode">Auto Do-Not-Disturb</string>
+    <string name="dnd_mode">Auto Do-Not-Disturb</string>
+    <string name="go_to_settings">Go to Settings</string>
+    <string name="auto_dnd_dialog_body">On the next screen, %s the do not disturb permission for %s. Then navigate back here</string>
+    <string name="enable">enable</string>
+    <string name="disable">disable</string>
 </resources>

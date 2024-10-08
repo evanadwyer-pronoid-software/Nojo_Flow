@@ -61,6 +61,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pronoidsoftware.nojoflow.R
 import com.pronoidsoftware.nojoflow.domain.PreferencesConstants
+import com.pronoidsoftware.nojoflow.presentation.notelist.components.DNDDialog
 import com.pronoidsoftware.nojoflow.presentation.ui.EnterTitleDialog
 import com.pronoidsoftware.nojoflow.presentation.ui.ObserveAsEvents
 import com.pronoidsoftware.nojoflow.presentation.ui.format
@@ -151,7 +152,8 @@ internal fun NoteListScreen(
                             )
                         }
                         Row(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(start = 60.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -159,12 +161,10 @@ internal fun NoteListScreen(
                             Switch(
                                 checked = state.isAutoDNDEnabled,
                                 onCheckedChange = {
-                                    val intent =
-                                        Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-                                    context.startActivity(intent)
+                                    onAction(NoteListAction.ShowDNDDialog)
                                 }
                             )
-                            Text(stringResource(R.string.enable_dnd_mode))
+                            Text(stringResource(R.string.dnd_mode))
                         }
                     }
                     Row(
@@ -250,6 +250,26 @@ internal fun NoteListScreen(
                     },
                     onDismiss = {
                         onAction(NoteListAction.DismissNewTitle)
+                    }
+                )
+            }
+
+            if (state.isShowingDNDDialog) {
+                DNDDialog(
+                    explanation = stringResource(
+                        R.string.auto_dnd_dialog_body,
+                        if (state.isAutoDNDEnabled) stringResource(R.string.disable)
+                        else stringResource(R.string.enable),
+                        stringResource(R.string.app_name)
+                    ),
+                    onClick = {
+                        val intent =
+                            Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                        context.startActivity(intent)
+                        onAction(NoteListAction.HideDNDDialog)
+                    },
+                    onDismiss = {
+                        onAction(NoteListAction.HideDNDDialog)
                     }
                 )
             }
