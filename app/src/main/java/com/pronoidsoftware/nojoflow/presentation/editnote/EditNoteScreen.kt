@@ -5,6 +5,7 @@ package com.pronoidsoftware.nojoflow.presentation.editnote
 import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -120,6 +121,7 @@ internal fun EditNoteScreen(
 
     Scaffold(
         modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
             .systemBarsPadding()
             .padding(top = 16.dp),
         contentWindowInsets = WindowInsets.systemBars

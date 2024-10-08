@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
@@ -47,8 +48,10 @@ class NoteListViewModel @Inject constructor(
             .onEach {
                 val requiredWritingTimeMin =
                     it[intPreferencesKey(PreferencesConstants.REQUIRED_WRITING_TIME)] ?: 5
+                val isAutoDNDEnabled = it[booleanPreferencesKey(PreferencesConstants.AUTO_DND_ENABLED)] ?: false
                 state = state.copy(
-                    requiredWritingTime = requiredWritingTimeMin
+                    requiredWritingTime = requiredWritingTimeMin,
+                    isAutoDNDEnabled = isAutoDNDEnabled
                 )
             }
             .launchIn(viewModelScope)

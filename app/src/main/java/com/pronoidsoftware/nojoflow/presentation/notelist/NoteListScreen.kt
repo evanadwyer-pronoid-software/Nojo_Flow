@@ -3,7 +3,10 @@
 package com.pronoidsoftware.nojoflow.presentation.notelist
 
 import android.app.Activity
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -36,6 +40,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -95,8 +100,10 @@ internal fun NoteListScreen(
     state: NoteListState,
     onAction: (NoteListAction) -> Unit
 ) {
+    val context = LocalContext.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -143,6 +150,22 @@ internal fun NoteListScreen(
                                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                             )
                         }
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .padding(start = 60.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Switch(
+                                checked = state.isAutoDNDEnabled,
+                                onCheckedChange = {
+                                    val intent =
+                                        Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                                    context.startActivity(intent)
+                                }
+                            )
+                            Text(stringResource(R.string.enable_dnd_mode))
+                        }
                     }
                     Row(
                         verticalAlignment = Alignment.CenterVertically
@@ -161,7 +184,6 @@ internal fun NoteListScreen(
             }
         }
     ) {
-        val context = LocalContext.current
         SideEffect {
             val window = (context as Activity).window
             WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -174,6 +196,7 @@ internal fun NoteListScreen(
 
         Scaffold(
             modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
                 .systemBarsPadding()
                 .padding(top = 16.dp),
             contentWindowInsets = WindowInsets.systemBars

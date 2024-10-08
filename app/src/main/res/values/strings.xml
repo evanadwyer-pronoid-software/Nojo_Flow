@@ -11,4 +11,5 @@
     <string name="settings">Change the required writing time</string>
     <string name="selected_time">Writing for %d minutes</string>
     <string name="time_selection">Select your required writing time:</string>
+    <string name="enable_dnd_mode">Auto Do-Not-Disturb</string>
 </resources>

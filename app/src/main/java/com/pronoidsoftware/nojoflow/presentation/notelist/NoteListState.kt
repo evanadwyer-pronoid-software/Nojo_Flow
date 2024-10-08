@@ -7,4 +7,5 @@ data class NoteListState(
     val requiredWritingTime: Int = 0,
     val isShowingRenameNoteDialog: Boolean = false,
     val noteBeingRenamed: Note? = null,
+    val isAutoDNDEnabled: Boolean = false,
 )

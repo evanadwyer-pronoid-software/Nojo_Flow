@@ -8,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import javax.inject.Singleton
 
 @Module
@@ -18,5 +19,11 @@ object AppModule {
     @Singleton
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
         return (context.applicationContext as NojoFlowApplication).dataStore
+    }
+
+    @Provides
+    @Singleton
+    fun provideApplicationScope(@ApplicationContext context: Context): CoroutineScope {
+        return (context.applicationContext as NojoFlowApplication).applicationScope
     }
 }

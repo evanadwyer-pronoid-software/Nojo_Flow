@@ -1,5 +1,7 @@
 package com.pronoidsoftware.nojoflow
 
+import android.app.NotificationManager
+import android.content.Context
 import android.os.Bundle
 import android.view.WindowInsets
 import androidx.activity.ComponentActivity
@@ -21,6 +23,27 @@ class MainActivity : ComponentActivity() {
                 val navHostController = rememberNavController()
                 NavigationRoot(navHostController)
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        toggleDND(true)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        toggleDND(false)
+    }
+
+    private fun toggleDND(dndEnabled: Boolean) {
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (notificationManager.isNotificationPolicyAccessGranted) {
+            notificationManager.setInterruptionFilter(
+                if (dndEnabled) NotificationManager.INTERRUPTION_FILTER_PRIORITY
+                else NotificationManager.INTERRUPTION_FILTER_ALL
+            )
         }
     }
 }
