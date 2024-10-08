@@ -29,9 +29,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -109,6 +112,9 @@ internal fun EditNoteScreen(
     onAction: (EditNoteAction) -> Unit
 ) {
     val context = LocalContext.current
+    val focusRequester = remember {
+        FocusRequester()
+    }
     SideEffect {
         val window = (context as Activity).window
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -182,6 +188,7 @@ internal fun EditNoteScreen(
                     .alpha(resetAlpha)
                     .weight(1f)
                     .fillMaxSize()
+                    .focusRequester(focusRequester)
             )
         }
 
@@ -189,6 +196,7 @@ internal fun EditNoteScreen(
             EnterTitleDialog(
                 onSubmit = { newTitle ->
                     onAction(EditNoteAction.OnTitleEntered(newTitle))
+                    focusRequester.requestFocus()
                 },
                 onDismiss = {
                     onAction(EditNoteAction.Cancel)
