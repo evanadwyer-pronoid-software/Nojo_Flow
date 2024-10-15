@@ -7,6 +7,7 @@ import android.view.WindowInsets
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.pronoidsoftware.nojoflow.presentation.NavigationRoot
 import com.pronoidsoftware.nojoflow.presentation.ui.theme.NojoFlowTheme
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         window.insetsController?.hide(WindowInsets.Type.statusBars())
         setContent {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             NojoFlowTheme {
                 val navHostController = rememberNavController()
                 NavigationRoot(navHostController)

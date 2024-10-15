@@ -1,16 +1,16 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 
 package com.pronoidsoftware.nojoflow.presentation.editnote
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -27,10 +27,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
@@ -44,9 +44,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pronoidsoftware.nojoflow.R
@@ -111,18 +108,8 @@ internal fun EditNoteScreen(
     canSave: Boolean,
     onAction: (EditNoteAction) -> Unit
 ) {
-    val context = LocalContext.current
     val focusRequester = remember {
         FocusRequester()
-    }
-    SideEffect {
-        val window = (context as Activity).window
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-            controller.hide(WindowInsetsCompat.Type.statusBars())
-            controller.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
     }
 
     Scaffold(
@@ -164,33 +151,28 @@ internal fun EditNoteScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        val isKeyboardOpen by keyboardAsState()
+
+        BasicTextField(
+            value = noteBody,
+            onValueChange = {
+                onAction(EditNoteAction.OnUserInput(it))
+            },
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences
+            ),
+            textStyle = TextStyle.Default.copy(
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
             modifier = Modifier
+                .imePadding()
+                .alpha(resetAlpha)
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            BasicTextField(
-                value = noteBody,
-                onValueChange = {
-                    onAction(EditNoteAction.OnUserInput(it))
-                },
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences
-                ),
-                textStyle = TextStyle.Default.copy(
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                modifier = Modifier
-                    .alpha(resetAlpha)
-                    .weight(1f)
-                    .fillMaxSize()
-                    .focusRequester(focusRequester)
-            )
-        }
+                .padding(start = 16.dp, end = 16.dp, bottom = if (isKeyboardOpen) 32.dp else 0.dp)
+                .focusRequester(focusRequester)
+        )
 
         if (isShowingTitleDialog) {
             EnterTitleDialog(
@@ -204,6 +186,12 @@ internal fun EditNoteScreen(
             )
         }
     }
+}
+
+@Composable
+fun keyboardAsState(): State<Boolean> {
+    val isImeVisible = WindowInsets.isImeVisible
+    return rememberUpdatedState(isImeVisible)
 }
 
 @Preview
