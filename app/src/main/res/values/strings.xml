@@ -16,4 +16,5 @@
     <string name="auto_dnd_dialog_body">On the next screen, %s the do not disturb permission for %s. Then navigate back here</string>
     <string name="enable">enable</string>
     <string name="disable">disable</string>
+    <string name="no_notes">You don\'t yet have any notes.\nTap the + to get started.</string>
 </resources>

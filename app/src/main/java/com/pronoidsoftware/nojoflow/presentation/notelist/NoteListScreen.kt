@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -274,31 +275,43 @@ internal fun NoteListScreen(
                 )
             }
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                items(
-                    items = state.notes,
-                    key = { it.id }
-                ) { note ->
-                    NoteItem(
-                        modifier = Modifier.animateItem(),
-                        noteTitle = note.title,
-                        onRenameClick = {
-                            onAction(NoteListAction.OpenRenameNote(note))
-                        },
-                        onDeletedClick = {
-                            onAction(NoteListAction.DeleteNote(note))
-                        },
-                        onEditNoteClick = {
-                            onAction(NoteListAction.EditNote(note.id))
-                        }
+            if (state.notes.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_notes),
+                        textAlign = TextAlign.Center,
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(
+                        items = state.notes,
+                        key = { it.id }
+                    ) { note ->
+                        NoteItem(
+                            modifier = Modifier.animateItem(),
+                            noteTitle = note.title,
+                            onRenameClick = {
+                                onAction(NoteListAction.OpenRenameNote(note))
+                            },
+                            onDeletedClick = {
+                                onAction(NoteListAction.DeleteNote(note))
+                            },
+                            onEditNoteClick = {
+                                onAction(NoteListAction.EditNote(note.id))
+                            }
+                        )
+                    }
                 }
             }
         }

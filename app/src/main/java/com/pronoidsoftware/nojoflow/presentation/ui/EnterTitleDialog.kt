@@ -65,7 +65,7 @@ fun EnterTitleDialog(
         ) {
             val titleTextField = rememberTextFieldState(initialText)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(stringResource(R.string.enter_title), color = Color.Black)
+            Text(stringResource(R.string.enter_title), color = Color.Black, textAlign = TextAlign.Center)
             BasicTextField(
                 titleTextField,
                 textStyle = TextStyle(
