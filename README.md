@@ -8,6 +8,4 @@ Nojo Flow is a note taking app. The twist is that if you stop writing before tim
 
 ![Photo mode export (14)](https://github.com/user-attachments/assets/bcfbf103-6515-4a1a-a75d-6677eeaa7ea0)
 
-https://github.com/user-attachments/assets/7dc9f367-7edd-4222-b769-79784116d3a0
-
-![NojoFlow removebg preview](https://github.com/user-attachments/assets/15a8480f-4f09-4854-aaf6-a893a193e98e)
+[<img src="https://github.com/user-attachments/assets/4ddc8aad-2f7f-4e86-a80d-ba360fdcf097" width="50%">](https://www.youtube.com/watch?v=zamyDQPeQGc "Forget-Me-Note Demo")
