@@ -24,6 +24,5 @@ fun timeAndEmitUntil(
             totalEmitTime += elapsedTime.milliseconds
             lastEmitTime = currentTime
         }
-        println("timer concluded")
     }
 }
