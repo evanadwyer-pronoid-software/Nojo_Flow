@@ -56,6 +56,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -178,6 +179,13 @@ internal fun NoteListScreen(
                             modifier = Modifier
                                 .size(100.dp)
                                 .padding(16.dp)
+                                .clickable {
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        "https://pronoid-software.com/".toUri()
+                                    )
+                                    context.startActivity(intent)
+                                }
                         )
                         Spacer(modifier = Modifier.weight(1f))
                     }
