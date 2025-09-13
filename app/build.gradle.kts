@@ -16,7 +16,7 @@ android {
         applicationId = "com.pronoidsoftware.nojoflow"
         minSdk = 30
         targetSdk = 35
-        versionCode = 6
+        versionCode = 7
         versionName = "1.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
